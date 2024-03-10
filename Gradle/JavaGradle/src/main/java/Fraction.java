@@ -53,24 +53,24 @@ public class Fraction {
          System.out.println(argX + " divided by " + argY + " = " + Math.floor(argX / argY));
       }
 
-      else {
-         try {
-            // create a new instance
-            // Fraction *frac = [[Fraction alloc] init];
-            Fraction frac = new Fraction();
+      // else {
+      //    try {
+      //       // create a new instance
+      //       // Fraction *frac = [[Fraction alloc] init];
+      //       Fraction frac = new Fraction();
 
-            // set the values
-            frac.setNumerator(1);
-            frac.setDenominator(3);
+      //       // set the values
+      //       frac.setNumerator(1);
+      //       frac.setDenominator(3);
 
-            // print it
-            System.out.print("The fraction is: ");
-            frac.print();
-            System.out.println("");
-         }catch(Exception e) {
-            e.printStackTrace();
-         }
-      }
+      //       // print it
+      //       System.out.print("The fraction is: ");
+      //       frac.print();
+      //       System.out.println("");
+      //    }catch(Exception e) {
+      //       e.printStackTrace();
+      //    }
+      // }
    }
 }
 
