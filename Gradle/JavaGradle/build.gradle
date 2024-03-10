@@ -68,6 +68,9 @@ task runFrac(type: JavaExec) {
   else if (project.hasProperty("num")) {
     args(project.getProperty('num'), 1);
   }
+  else {
+    args(1, 1);
+  }
 }
 
 // Try:
