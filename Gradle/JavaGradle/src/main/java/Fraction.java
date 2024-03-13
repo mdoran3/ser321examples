@@ -53,7 +53,7 @@ public class Fraction {
          System.out.println(argX + " divided by " + argY + " = " + Math.floor(argX / argY));
       }
 
-      // This block runs in gradle task runFraction is called
+      // This block runs if gradle task runFraction is called
       else {
          try {
             // create a new instance
