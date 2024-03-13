@@ -53,6 +53,7 @@ public class Fraction {
          System.out.println(argX + " divided by " + argY + " = " + Math.floor(argX / argY));
       }
 
+      // OLD CODE
       // else {
       //    try {
       //       // create a new instance
