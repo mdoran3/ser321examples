@@ -5,7 +5,7 @@ plugins {
 
 apply plugin: 'application'
 
-mainClassName = 'funHttpServer.main'
+mainClassName = 'funHttpServer.WebServer'
 
 repositories {
     // Add Maven Central repository
