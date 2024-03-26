@@ -1,11 +1,7 @@
-// set as java application
 plugins {
     id 'java'
+    id 'application'
 }
-
-apply plugin: 'application'
-
-mainClassName = 'funHttpServer.WebServer'
 
 repositories {
     // Add Maven Central repository
@@ -16,34 +12,38 @@ dependencies {
     implementation group: 'org.json', name: 'json', version: '20210307'
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'funHttpServer.WebServer'
+    }
+}
+
 task createJar(type: Jar) {
     from sourceSets.main.output
     archiveFileName = "FunWebServer.jar"
     destinationDirectory = file("$buildDir/libs")
 }
 
-
-//define main class
-mainClassName = 'SimpleServer'
+// Define main class
+mainClassName = 'funHttpServer.WebServer'
 
 task SimpleWebServer(type: JavaExec) {
-  group 'http'
-  description 'Simple Http Demo'
+    group 'http'
+    description 'Simple Http Demo'
 
-  classpath = sourceSets.main.runtimeClasspath
-
-  main = 'httpServer.WebServer'
-  standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'httpServer.WebServer'
+    standardInput = System.in
 }
 
 task FunWebServer(type: JavaExec) {
-  group 'http'
-  description 'Simple Http Demo'
+    group 'http'
+    description 'Simple Http Demo'
 
-  classpath = sourceSets.main.runtimeClasspath
-
-  main = 'funHttpServer.WebServer'
-  standardInput = System.in
+    classpath = sourceSets.main.runtimeClasspath
+    main = 'funHttpServer.WebServer'
+    standardInput = System.in
 }
 
+//FunWebServer.dependsOn createJar
 
