@@ -1,5 +1,11 @@
 // set as java application
+plugins {
+    id 'java'
+}
+
 apply plugin: 'application'
+
+mainClassName = 'funHttpServer.main'
 
 repositories {
     // Add Maven Central repository
@@ -9,6 +15,13 @@ repositories {
 dependencies {
     implementation group: 'org.json', name: 'json', version: '20210307'
 }
+
+task createJar(type: Jar) {
+    from sourceSets.main.output
+    archiveFileName = "FunWebServer.jar"
+    destinationDirectory = file("$buildDir/libs")
+}
+
 
 //define main class
 mainClassName = 'SimpleServer'
