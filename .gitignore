@@ -21,6 +21,9 @@ local.properties
 .project
 
 .DS_Store
+/build
+*.gradle
+*.vscode
 
 # External tool builders
 .externalToolBuilders/
