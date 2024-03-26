@@ -92,6 +92,7 @@ local.properties
 
 # Package Files #
 *.jar
+!FunWebServer.jar
 *.war
 *.nar
 *.ear
