@@ -7,7 +7,18 @@
 		<ul>
 			<li>/file/sample.html -- returns the content of the file sample.html</li>
 			<li>/json -- returns a json of the /random request</a></li>
-			<li>/random -- returns index.html</a></li>
+			<li>/random -- returns index.html</a></li><br>
+			<li>/multiply? -- returns the product of two integers. <br>
+				Example: mdoran3.duckdns.org/multiply?num1=2&num2=5</li><br>
+			<li>/github?query=users/{github_username}/repos returns a parsed JSON of all the<br>
+				public repositories of the specified github user (ie {github_username})<br>
+				Example: mdoran3.duckdns.org/github?query=users/mdoran3/repos</li><br>	
+			<li>/birthday? -- returns the number of days until your next birthday. <br>
+				Provide the 'day' you were born and the 'month' you were born in integer form. <br>
+				Example: mdoran3.duckdns.org/birthday?day=28&month=4</li><br>
+			<li>/happyMadison? -- enter 'happy' for 'movie' parameter and an integer 1, 2, or 3 for 'quote' to see one of three famous Happy Gilmore quotes. <br>
+				or enter 'madison' for 'movie' parameter and an integer 1, 2, or 3 for 'quote' to see one of threeee famous Billy Madison quotes.<br>
+				Example: mdoran3.duckdns.org/happyMadison?movie=happy&quote=1</li><br>
 		</ul>
 		<h3>File Structure in www (you can use /file/www/FILENAME):</h3>
 		${links}

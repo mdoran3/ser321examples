@@ -1,5 +1,5 @@
 /*
-Simple Web Server in Java which allows you to call 
+Simple Web Server in Java which allows you to call
 localhost:9000/ and show you the root.html webpage from the www/root.html folder
 You can also do some other simple GET requests:
 1) /random shows you a random picture (well random from the set defined)
@@ -9,8 +9,8 @@ You can also do some other simple GET requests:
 5) /github?query=users/amehlhase316/repos (or other GitHub repo owners) will lead to receiving
    JSON which will for now only be printed in the console. See the todo below
 
-The reading of the request is done "manually", meaning no library that helps making things a 
-little easier is used. This is done so you see exactly how to pars the request and 
+The reading of the request is done "manually", meaning no library that helps making things a
+little easier is used. This is done so you see exactly how to pars the request and
 write a response back
 */
 
@@ -22,9 +22,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Random;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 class WebServer {
   public static void main(String args[]) {
@@ -85,7 +91,7 @@ class WebServer {
    * @param inStream HTTP input stream from socket
    * @return the byte encoded HTTP response
    */
-  public byte[] createResponse(InputStream inStream) {
+  public byte[] createResponse(InputStream inStream) throws IOException {
 
     byte[] response = null;
     BufferedReader in = null;
@@ -200,45 +206,271 @@ class WebServer {
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
           // extract path parameters
           query_pairs = splitQuery(request.replace("multiply?", ""));
+          //Set init cars
+          Integer num1;
+          Integer num2;
 
-          // extract required fields from parameters
-          Integer num1 = Integer.parseInt(query_pairs.get("num1"));
-          Integer num2 = Integer.parseInt(query_pairs.get("num2"));
+          try {
+            // if query is empty
+            if (query_pairs.isEmpty() || query_pairs == null || !query_pairs.containsKey("num1") ||
+              !query_pairs.containsKey("num2") || query_pairs.get("num1").isEmpty() || query_pairs.get("num2").isEmpty()) {
 
-          // do math
-          Integer result = num1 * num2;
+              // Generate response
+              builder.append("HTTP/1.1 400 BAD REQUEST\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("You need to provide two numbers to multiply. You did not provide 2 numbers.");
+            }
 
-          // Generate response
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Result is: " + result);
+            // set vars if parameters are given
+            else if (query_pairs.containsKey("num1") && query_pairs.containsKey("num2")) {
+                num1 = Integer.parseInt(query_pairs.get("num1"));
+                num2 = Integer.parseInt(query_pairs.get("num2"));
+                // do math
+                Integer result = num1 * num2;
+                // Generate response
+                builder.append("HTTP/1.1 200 OK\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Result is: " + result);
 
-          // TODO: Include error handling here with a correct error code and
-          // a response that makes sense
+            } else {
+              throw new IllegalArgumentException("You must provide two numbers to multiply");
+            }
+          } catch (NumberFormatException e) {
+            // If num1 or num2 is not a valid integer
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Invalid input: The parameters 'num1' and 'num2' must be integers.");
+          }
 
         } else if (request.contains("github?")) {
-          // pulls the query from the request and runs it with GitHub's REST API
-          // check out https://docs.github.com/rest/reference/
-          //
-          // HINT: REST is organized by nesting topics. Figure out the biggest one first,
-          //     then drill down to what you care about
-          // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
-          //     "/repos/OWNERNAME/REPONAME/contributors"
+
+          try {
+            // pulls the query from the request and runs it with GitHub's REST API
+            // check out https://docs.github.com/rest/reference/
+            //
+            // HINT: REST is organized by nesting topics. Figure out the biggest one first,
+            //     then drill down to what you care about
+            // "Owner's repo is named RepoName. Example: find RepoName's contributors" translates to
+            //     "/repos/OWNERNAME/REPONAME/contributors"
+
+            Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+
+            query_pairs = splitQuery2(request.replace("github?", ""));
+
+            System.out.println(request);
+
+            String query = query_pairs.get("query");
+            System.out.println(query);
+
+            String githubUrl = "https://api.github.com/" + query_pairs.get("query");
+            String json = fetchURL(githubUrl);
+
+            System.out.println(json);
+
+            if (json == null || json.isEmpty()) { // failure
+              builder.append("HTTP/1.1 400 BAD REQUEST\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Could not fetch json for url: " + githubUrl);
+
+            } else { // success
+
+              builder.append("HTTP/1.1 200 OK\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              // builder.append("Check the todos mentioned in the Java source file");
+
+              // TODO: Parse the JSON returned by your fetch and create an appropriate
+              // response based on what the assignment document asks for
+
+              // Parse the String into a JSONObject
+              JSONArray arr = new JSONArray(json);
+
+              // Loop through the array and print out the name and url
+              for (int i = 0; i < arr.length(); i++) {
+                String fullName = arr.getJSONObject(i).getString("full_name");
+                Long id = arr.getJSONObject(i).getLong("id");
+                JSONObject owner = arr.getJSONObject(i).getJSONObject("owner");
+                String login = owner.getString("login");
+
+                builder.append("full_name: " + fullName + "\tid: " + id + "\towner/login: " + login + "\n<br />");
+              }
+            }
+          } catch (Exception e) {
+            builder.append("HTTP/1.1 400 BAD REQUEST\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Please check the formatting of your url. <br />");
+            builder.append(e.getMessage());
+            e.printStackTrace();
+          }
+        } else if (request.contains("birthday?")) {
+          // This multiplies two numbers, there is NO error handling, so when
+          // wrong data is given this just crashes
 
           Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-          query_pairs = splitQuery(request.replace("github?", ""));
-          String json = fetchURL("https://api.github.com/" + query_pairs.get("query"));
-          System.out.println(json);
+          // extract path parameters
+          query_pairs = splitQuery(request.replace("birthday?", ""));
+          //Set init cars
+          Integer day;
+          Integer month;
 
-          builder.append("HTTP/1.1 200 OK\n");
-          builder.append("Content-Type: text/html; charset=utf-8\n");
-          builder.append("\n");
-          builder.append("Check the todos mentioned in the Java source file");
-          // TODO: Parse the JSON returned by your fetch and create an appropriate
-          // response based on what the assignment document asks for
+          try {
+            // if query is empty
+            if (query_pairs.isEmpty() || query_pairs == null || !query_pairs.containsKey("day") ||
+              !query_pairs.containsKey("month") || query_pairs.get("day").isEmpty() || query_pairs.get("month").isEmpty()) {
 
-        } else {
+              // Generate response
+              builder.append("HTTP/1.1 400 BAD REQUEST\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("You need to provide two numbers, one for the integer representation of the month that you were born and the other for the day in which you were born.");
+            }
+
+            // set vars if parameters are given
+            else if (query_pairs.containsKey("day") && query_pairs.containsKey("month")) {
+                day = Integer.parseInt(query_pairs.get("day"));
+                month = Integer.parseInt(query_pairs.get("month"));
+                // do math
+                LocalDate today = LocalDate.now();
+                int currentYear = today.getYear();
+                LocalDate birthday = LocalDate.of(currentYear, month, day);
+                if (today.isAfter(birthday) || today.isEqual(birthday)) {
+                  birthday = birthday.plusYears(1);
+                }
+                long daysUntilBirthday = today.until(birthday, ChronoUnit.DAYS);
+
+                builder.append("HTTP/1.1 200 OK\n");
+                builder.append("Content-Type: text/html; charset=utf-8\n");
+                builder.append("\n");
+                builder.append("Days until your next birthday: " + daysUntilBirthday);
+            } else {
+              throw new IllegalArgumentException("You must provide your birthday in the format 'day' and 'month' as integers.");
+              }
+            } catch (NumberFormatException e) {
+              // If num1 or num2 is not a valid integer
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Invalid input");
+          }
+        } else if (request.contains("happyMadison?")) {
+
+          Map<String, String> query_pairs = splitQuery3(request.replace("happyMadison?", ""));
+
+          if (query_pairs.containsKey("movie") && query_pairs.containsKey("quote")) {
+            String movie = query_pairs.get("movie");
+            int quoteNo;
+
+            try {
+              quoteNo = Integer.parseInt(query_pairs.get("quote"));
+            } catch (NumberFormatException e) {
+              builder.append("HTTP/1.1 400 Bad Request\n");
+              builder.append("Content-Type: text/html; charset=utf-8\n");
+              builder.append("\n");
+              builder.append("Invalid quote number");
+              response = builder.toString().getBytes();
+              return response;
+            }
+
+            String quote = "";
+                  
+            if (movie.equalsIgnoreCase("happy")) {
+              switch(quoteNo) {
+                case 1: 
+                  quote = "Hey, why don't I just go eat some hay, make things out of clay, lay by the bay? I just may!";
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                case 2:
+                  quote = "Yeah, Right, And Grizzly Adams Had A Beard.";
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                case 3:
+                  quote = "My fingers hurt. Oh, well, now your back's gonna hurt, 'cause you just pulled landscaping duty. Anybody else's fingers hurt?... I didn't think so.";
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                default:
+                  builder.append("HTTP/1.1 400 Bad Request\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("Invalid quote number. Try 1, 2, or 3.");
+                  response = builder.toString().getBytes();
+                  return response;
+              }
+            } else if (movie.equalsIgnoreCase("madison")) {
+              switch(quoteNo) {
+                case 1: 
+                  quote = "If peeing your pants is cool, consider me Miles Davis.";
+                  // Generate response
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                case 2:
+                  quote = "I award you no points, and may God have mercy on your soul.";
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                case 3:
+                  quote = "That Veronica Vaughn is one piece of ace, I know from experience dude. If you know what I mean.";
+                  builder.append("HTTP/1.1 200 OK\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("<html><body>");
+                  builder.append("<h1>Quote:</h1>");
+                  builder.append("<p>" + quote + "</p>");
+                  builder.append("</body></html>");
+                  break;
+                default:
+                  builder.append("HTTP/1.1 400 Bad Request\n");
+                  builder.append("Content-Type: text/html; charset=utf-8\n");
+                  builder.append("\n");
+                  builder.append("Invalid quote number. Try 1, 2, or 3.");
+                  response = builder.toString().getBytes();
+                  return response;
+              }
+            }
+            else {
+            builder.append("HTTP/1.1 400 Bad Request\n");
+            builder.append("Content-Type: text/html; charset=utf-8\n");
+            builder.append("\n");
+            builder.append("Invalid movie. Try 'happy' or 'madison'.");
+            response = builder.toString().getBytes();
+            return response;
+            }
+          }
+        }
+        else {
           // if the request is not recognized at all
 
           builder.append("HTTP/1.1 400 Bad Request\n");
@@ -266,17 +498,70 @@ class WebServer {
    */
   public static Map<String, String> splitQuery(String query) throws UnsupportedEncodingException {
     Map<String, String> query_pairs = new LinkedHashMap<String, String>();
-    // "q=hello+world%2Fme&bob=5"
-    String[] pairs = query.split("&");
-    // ["q=hello+world%2Fme", "bob=5"]
-    for (String pair : pairs) {
-      int idx = pair.indexOf("=");
-      query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
-          URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+
+    if (query.contains("&")) {
+      // "q=hello+world%2Fme&bob=5"
+      String[] pairs = query.split("&");
+      // ["q=hello+world%2Fme", "bob=5"]
+      for (String pair : pairs) {
+        int idx = pair.indexOf("=");
+        query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+            URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+      }
     }
-    // {{"q", "hello world/me"}, {"bob","5"}}
+    else if (query.contains("?") && !query.contains("&")){
+      throw new IllegalArgumentException("Not all parameters given in the query.");
+    }
+    else if (query.contains("?") && !query.contains("num1=")){
+      throw new IllegalArgumentException("Not all parameters given in the query.");
+    }
+    //{{"q", "hello world/me"}, {"bob","5"}}
     return query_pairs;
   }
+
+  public static Map<String, String> splitQuery2(String urlString) throws UnsupportedEncodingException {
+
+    Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+
+    System.out.println(urlString);
+
+    String query = urlString;
+    String[] pairs = query.split("&");
+
+    for (String pair : pairs) {
+        int idx = pair.indexOf("=");
+        query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"), URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+    }
+
+    return query_pairs;
+  }
+
+  public static Map<String, String> splitQuery3(String urlString) throws UnsupportedEncodingException {
+    Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+
+    // Print the URL to check if it's correct
+    System.out.println("URL: " + urlString);
+
+    // Remove the "happyMadison?" prefix
+    String query = urlString.replace("happyMadison?", "");
+
+    // Split the query string based on "&"
+    String[] pairs = query.split("&");
+
+    for (String pair : pairs) {
+        int idx = pair.indexOf("=");
+        // Extract key-value pairs and decode them
+        String key = URLDecoder.decode(pair.substring(0, idx), "UTF-8");
+        String value = URLDecoder.decode(pair.substring(idx + 1), "UTF-8");
+        // Put the key-value pair into the map
+        System.out.println("Key: " + key + ", Value: " + value);
+        query_pairs.put(key, value);
+    }
+
+    return query_pairs;
+}
+
+
 
   /**
    * Builds an HTML file list from the www directory
@@ -330,7 +615,7 @@ class WebServer {
    * a method to make a web request. Note that this method will block execution
    * for up to 20 seconds while the request is being satisfied. Better to use a
    * non-blocking request.
-   * 
+   *
    * @param aUrl the String indicating the query url for the OMDb api search
    * @return the String result of the http request.
    *
